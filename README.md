@@ -1,7 +1,8 @@
 # skill-frontmatter-doctor
 
-Finds and repairs `SKILL.md` frontmatter that YAML cannot parse — the quiet failure that makes an
-agent skill invisible while it still looks perfectly healthy on disk.
+Finds and repairs `SKILL.md` frontmatter that a spec-compliant YAML parser rejects, without
+changing what the frontmatter says. A linter for portability — not a fix for any particular
+harness's behavior (see the measured parser-tolerance table below).
 
 No dependencies. Python 3.8+. Standard library only.
 
