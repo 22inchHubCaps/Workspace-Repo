@@ -23,19 +23,29 @@ frontmatter block fails.
 ## Why it's worth a tool
 
 The failure is silent. The file still exists, still has a description, still opens fine in an
-editor. But the harness can't parse its frontmatter, so **the description never reaches the model** —
-and a skill with no description can only be invoked by typing its exact name. It can never be
-selected because it fits the situation.
+editor, and nothing warns you.
 
-That produces a nasty second-order effect: usage statistics for such a skill measure the bug, not
-the skill. If you're deciding which skills to prune based on how often they fire, broken frontmatter
-looks identical to "nobody wants this."
+Anthropic treats unparseable frontmatter as a real defect worth reporting: Claude Code **v2.1.221**
+added `claude plugin validate`, described in the changelog as checking *"a bare `.claude/skills`
+directory, reporting SKILL.md files whose frontmatter fails to parse."* If your Claude Code is new
+enough, run that too — it's the first-party arbiter and it doesn't depend on this tool or on PyYAML
+being stricter than the harness.
 
-The natural instinct when descriptions go missing — *my files are fine, it must be the harness* — is
-worth testing before you believe it. In one real 54-skill library, **18 files (33%) were affected**,
-and nearly all of them shared a single house style: a `WORD:` marker in the middle of the
-description. The convention written to make those skills easier to trigger was the thing stopping
-them from being seen.
+**What this tool does and does not claim.** It finds files whose frontmatter is invalid YAML by
+spec, and repairs them without changing what they say. That is worth doing on its own: malformed
+frontmatter is a portability bug across every tool that reads these files with a standard parser.
+
+What it does **not** claim is that fixing a file will restore some specific behavior in your agent
+harness. Different harnesses have different parsers with different tolerances, and a skill's
+description can also go missing for reasons that have nothing to do with YAML — listing budgets and
+truncation being the obvious one. **If descriptions are disappearing on you, diagnose before you
+edit.** Run this checker *and* your harness's own validator, and don't assume a single cause
+explains every missing description.
+
+In one real 54-skill library, **18 files (33%) were invalid YAML**, and nearly all shared a single
+house style: a `WORD:` marker mid-description. The convention written to make those skills easier to
+trigger was the thing making them unparseable. Whether that was also why they went missing from that
+particular harness's listing was never established — which is exactly the point above.
 
 ## Install
 
