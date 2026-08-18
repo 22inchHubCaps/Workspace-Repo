@@ -25,11 +25,31 @@ frontmatter block fails.
 The failure is silent. The file still exists, still has a description, still opens fine in an
 editor, and nothing warns you.
 
-Anthropic treats unparseable frontmatter as a real defect worth reporting: Claude Code **v2.1.221**
-added `claude plugin validate`, described in the changelog as checking *"a bare `.claude/skills`
-directory, reporting SKILL.md files whose frontmatter fails to parse."* If your Claude Code is new
-enough, run that too — it's the first-party arbiter and it doesn't depend on this tool or on PyYAML
-being stricter than the harness.
+Anthropic treats unparseable frontmatter as a real defect. Claude Code **v2.1.221** added
+`claude plugin validate`, which checks a bare `.claude/skills` directory; on frontmatter it cannot
+parse it reports, verbatim:
+
+> `frontmatter: YAML frontmatter failed to parse: YAML Parse error: Unexpected token. At runtime
+> this skill loads with empty metadata (all frontmatter fields silently dropped).`
+
+**That is the failure this tool exists to prevent — but read the next paragraph before you assume
+this tool and that one agree.**
+
+### Claude Code's parser is more permissive than PyYAML — measured
+
+Run against a real 54-skill library on Claude Code 2.1.234, with planted controls:
+
+| Input | `claude plugin validate` | PyYAML |
+|---|---|---|
+| 54 real skills (18 with `": "` in an unquoted description) | passed, incl. `--strict` | rejects 18 |
+| `description: [unclosed flow seq` | passed | rejects |
+| SKILL.md with no `name` field | passed | n/a |
+| tab-indented garbage frontmatter | **failed, correctly** | rejects |
+
+So the native validator *can* fail — the last row proves it — but colon-space does not trip it.
+**A pass there does not mean the file is valid YAML, and a failure here does not mean your harness
+is affected.** Use both: this tool for spec-correctness and portability, `claude plugin validate`
+for what your runtime actually rejects.
 
 **What this tool does and does not claim.** It finds files whose frontmatter is invalid YAML by
 spec, and repairs them without changing what they say. That is worth doing on its own: malformed
@@ -42,10 +62,11 @@ truncation being the obvious one. **If descriptions are disappearing on you, dia
 edit.** Run this checker *and* your harness's own validator, and don't assume a single cause
 explains every missing description.
 
-In one real 54-skill library, **18 files (33%) were invalid YAML**, and nearly all shared a single
-house style: a `WORD:` marker mid-description. The convention written to make those skills easier to
-trigger was the thing making them unparseable. Whether that was also why they went missing from that
-particular harness's listing was never established — which is exactly the point above.
+In that same library, nearly all 18 shared one house style: a `WORD:` marker mid-description. The
+convention written to make those skills easier to trigger was the thing making them unparseable by a
+spec-compliant parser. It was **not** why they went missing from that harness's listing — that
+hypothesis was tested against the native validator and refuted. Fix these files for portability, not
+for a behavior change.
 
 ## Install
 
